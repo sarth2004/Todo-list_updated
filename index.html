@@ -80,6 +80,88 @@
         <button id="addTaskBtn">Add Task</button>
         <ul id="taskList"></ul>
     </div>
-    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const taskInput = document.getElementById("taskInput");
+            const datetimeInput = document.getElementById("datetimeInput");
+            const addTaskBtn = document.getElementById("addTaskBtn");
+            const taskList = document.getElementById("taskList");
+        
+            
+            loadTasks();
+        
+            addTaskBtn.addEventListener("click", function() {
+                const taskText = taskInput.value.trim();
+                const datetimeValue = datetimeInput.value;
+                if (taskText !== "" && datetimeValue !== "") {
+                    addTask(taskText, datetimeValue);
+                    taskInput.value = "";
+                    datetimeInput.value = "";
+                } else {
+                    alert("Please enter both task and date/time.");
+                }
+            });
+        
+            taskInput.addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    addTaskBtn.click();
+                }
+            });
+        
+            taskList.addEventListener("click", function(event) {
+                if (event.target.classList.contains("deleteTaskBtn")) {
+                    event.target.closest("li").remove();
+                    updateLocalStorage();
+                } else if (event.target.classList.contains("editTaskBtn")) {
+                    const taskSpan = event.target.closest("li").querySelector("span");
+                    const newTaskText = prompt("Enter new task:", taskSpan.textContent);
+                    if (newTaskText !== null && newTaskText.trim() !== "") {
+                        taskSpan.textContent = newTaskText.trim();
+                        updateLocalStorage();
+                    }
+                } else if (event.target.tagName === "SPAN") {
+                    event.target.classList.toggle("completed");
+                    updateLocalStorage();
+                }
+            });
+        
+            function addTask(taskText, datetimeValue) {
+                const li = document.createElement("li");
+                li.innerHTML = `
+                    <span>${taskText}</span>
+                    <span>${formatDateTime(datetimeValue)}</span>
+                    <div class="task-actions">
+                        <button class="editTaskBtn">Edit</button>
+                        <button class="deleteTaskBtn">Delete</button>
+                    </div>
+                `;
+                taskList.appendChild(li);
+                updateLocalStorage();
+            }
+        
+            function loadTasks() {
+                const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+                tasks.forEach(task => addTask(task.text, task.datetime));
+            }
+        
+            function updateLocalStorage() {
+                const tasks = [];
+                document.querySelectorAll("#taskList li").forEach(li => {
+                    tasks.push({
+                        text: li.querySelector("span").textContent,
+                        datetime: li.querySelector("span:nth-child(2)").textContent
+                    });
+                });
+                localStorage.setItem("tasks", JSON.stringify(tasks));
+            }
+
+            function formatDateTime(datetimeValue) {
+                const datetime = new Date(datetimeValue);
+                const date = datetime.toLocaleDateString();
+                const time = datetime.toLocaleTimeString();
+                return `${date} ${time}`;
+            }
+        });
+    </script>
 </body>
 </html>
